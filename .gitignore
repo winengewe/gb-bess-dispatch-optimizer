@@ -1,41 +1,83 @@
-# ==========================================
-# 1. Sensitive Data & Secrets
-# ==========================================
-.env
-*.env
-*.pem
-*.key
-config/secrets.yaml
+# ==============================================================================
+# PYTHON & VIRTUAL ENVIRONMENTS
+# ==============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 
-# ==========================================
-# 2. Virtual Environments & Packages
-# ==========================================
+# Virtual Environments
 venv/
 .venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 
-# ==========================================
-# 3. Large Datasets & Local Data
-# ==========================================
+# Distribution / Packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==============================================================================
+# DATA DIRECTORIES (IGNORE DATA PAYLOADS, PRESERVE FOLDER STRUCTURE)
+# ==============================================================================
+# Ignore all raw and processed dataset files...
 data/raw/*
+data/processed/*
+
+# ...except for the .gitkeep files so empty directories are tracked
 !data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Ignore standalone dataset dumps if generated in root
 *.csv
 *.parquet
+*.feather
+*.json
 *.sqlite3
 
-# ==========================================
-# 4. Python Bytecode & Cache
-# ==========================================
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
+# ==============================================================================
+# STREAMLIT & DASHBOARD CACHE
+# ==============================================================================
+.streamlit/secrets.toml
 
-# ==========================================
-# 5. IDE & Operating System Files
-# ==========================================
+# ==============================================================================
+# JUPYTER NOTEBOOKS & LOGS
+# ==============================================================================
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+*.log
+
+# ==============================================================================
+# IDE & OS SPECIFIC FILES
+# ==============================================================================
+# VS Code
 .vscode/
+
+# PyCharm / IntelliJ
 .idea/
+
+# macOS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Windows
 Thumbs.db
+desktop.ini
