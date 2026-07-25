@@ -221,10 +221,10 @@ Backtest evaluation performed over a 30-day unseen test horizon across 1,440 set
 
 | Metric | Naive Strategy (Historical Avg) | XGBoost Strategy (Model) | Perfect Foresight (Benchmark) |
 | --- | --- | --- | --- |
-| **Daily Net Profit (£)** | £4,120 / day | **£7,480 / day** | £8,520 / day |
-| **Capture Rate (%)** | 48.3% | **87.8%** | 100.0% |
-| **Forecast MAE (£/MWh)** | — | **£7.85 / MWh** | — |
-| **Daily Equivalent Cycles** | 2.10 | **1.65** | 1.82 |
+| **Daily Net Profit (£)** | £520 / day | **£1,245 / day** | £2,680 / day |
+| **Capture Rate (%)** | 19.4% | **46.5%** | 100.0% |
+| **Forecast MAE (£/MWh)** | — | **£8.15 / MWh** | — |
+| **Daily Equivalent Cycles** | 0.35 | **0.58** | 1.12 |
 
 ### Key Insights
 
@@ -240,12 +240,12 @@ Backtest evaluation performed over a 30-day unseen test horizon across 1,440 set
 | :--- | :--- |
 | **Asset Rating** | 50.0 MW / 100.0 MWh |
 | **Round-Trip Efficiency** | 88.0% |
-| **Gross Arbitrage Rev** | £8,926.96 |
-| **Degradation Penalty** | £4,507.95 |
-| **Model Net Revenue** | **£4,419.01** |
-| **Perfect Foresight Rev** | £4,690.90 |
-| **Financial Capture** | **94.2%** |
-| **Equivalent Cycles<** | 1.69 EFC/day |
+| **Gross Arbitrage Rev** | £2,363.92 |
+| **Degradation Penalty** | £1,252.56 |
+| **Model Net Revenue** | **£1,111.35** |
+| **Perfect Foresight Rev** | £2,688.64 |
+| **Financial Capture** | **41.3%** |
+| **Equivalent Cycles<** | 0.50 EFC/day |
 
 ---
 
