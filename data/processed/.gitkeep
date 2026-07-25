@@ -1,0 +1,3 @@
+# Create empty .gitkeep files so Git tracks the folder structure
+touch data/raw/.gitkeep
+touch data/processed/.gitkeep
