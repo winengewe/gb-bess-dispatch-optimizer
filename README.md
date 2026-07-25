@@ -220,9 +220,8 @@ Backtest evaluation performed over a 30-day unseen test horizon across 1,440 set
 
 ### Single-Day Execution Snapshot ( `main.py` Console Output)
 
----
-
 ### 📊 Daily Dispatch Optimization Summary Report
+
 
 | Metric | Value |
 | :--- | :--- |
