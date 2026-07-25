@@ -25,11 +25,19 @@ Operating a commercial BESS asset requires:
 3. **Capture Rate Analysis:** Quantifying strategy performance against a theoretical Perfect Foresight benchmark to evaluate model forecast error impact.
 
 ---
+## ✨ Key Features
+* **Automated Data Ingestion:** Connects to wholesale electricity market data pipelines (Elexon Insights API endpoints for `B1770` settlement prices, `B1440` wind forecasts, and system demand) with built-in synthetic market generator fallbacks.
+* **Time-Series Feature Engineering:** Generates multi-period time-series lags ($t-24\text{h}$, $t-48\text{h}$), diurnal Fourier terms for cyclical calendar trends, and wind-to-demand supply ratio features.
+* **Leakage-Free ML Price Engine:** Trains an XGBoost regressor using expanding-window **Walk-Forward Cross-Validation** to prevent future-data lookahead bias.
+* **Commercial LP Optimizer:** Formulates and solves daily dispatch schedules via `PuLP` (CBC Solver), strictly enforcing round-trip efficiency ($\text{RTE} = 88\%$), storage bounds ($0 - 100\text{ MWh}$), and battery wear penalties.
+* **Dual-Pass Financial Benchmarking:** Evaluates real-time strategy performance against a theoretical **Perfect Foresight** solver to calculate exact Financial Capture Rates (41.3% single-day / 46.5% 30-day average).
+* **Publication-Grade Visualizations:** Generates dual-panel plots overlaying forecast vs. realized wholesale prices, charge/discharge power blocks, and real-time State-of-Charge (SoC) tracking.
+* **Interactive Streamlit Workbench:** Enables real-time parameter sensitivity analysis (power rating, storage capacity, efficiency, degradation penalties, and market seeds) with unified YAML settings synchronization.
+---
 
 ## 🏗 System Architecture
 
-```
-
+```text
                               [ ELEXON INSIGHTS API ]
                           (B1770 / B1440 / Demand Data)
                                          │
@@ -53,19 +61,11 @@ Operating a commercial BESS asset requires:
                      ▼                                       ▼
           [ CLI PIPELINE (main.py) ]             [ INTERACTIVE UI (app.py) ]
        (Automated KPI Report & Chart)             (Streamlit Real-Time Sliders)
-
 ```
+---
 
 ## 📊 Performance & Optimization Summary
-
-### Dispatch Profile Plot
-
-![Plot Description](https://github.com/winengewe/gb-bess-dispatch-optimizer/blob/c342ea064840c612c0aadf4b471bfc28c4f6c3fd/docs/dispatch_plot.png)
-
-### Single-Day Execution Snapshot ( `main.py` Console Output)
-
-### 📊 Daily Dispatch Optimization Summary Report
-
+Single-Day Out-of-Sample Execution Snapshot (Seed 101)
 
 | Operational Metric | Value | Description |
 | :--- | :--- | :--- |
@@ -90,11 +90,12 @@ Evaluating the dispatch framework across a 30-day out-of-sample horizon (1,440 s
 | **Forecast MAE (£/MWh)** | — | **£8.15 / MWh** | — |
 | **Daily Equivalent Cycles** | 0.35 | **0.58** | 1.12 |
 
-### Key Insights
+---
+## 💡 Key Strategy & Operational Insights
 
-* **Degradation Impact:** Adding the £12.50/MWh degradation penalty successfully eliminated low-margin micro-cycling, reducing daily battery wear by **21%** while preserving **95%+** of available arbitrage value.
-* **Forecast Value:** The XGBoost model achieved an **87.8% Capture Rate** relative to perfect market foresight, proving that accurate wind-to-demand ratio features capture peak price spikes effectively.
-
+* **Hurdle-Rate Micro-Cycling Suppression:** Enforcing the **£12.50/MWh degradation penalty** establishes a breakeven price spread threshold ($\Delta P_{\text{breakeven}} \approx £26.65/\text{MWh}$), successfully preventing non-economic micro-cycling. This suppresses unnecessary battery wear by **~21%** while preserving over **95%** of net arbitrage value.
+* **Realistic Financial Capture Performance:** Under out-of-sample backtesting, the XGBoost-driven model achieved a **41.3% Financial Capture Rate** (£1,111.35 net profit) on single-day evaluations and **46.5%** (£1,245/day) across a 30-day horizon relative to an unconstrained Perfect Foresight benchmark (£2,689.65/day).
+* **Wind-Load Feature Sensitivity:** Coupling wind generation outturns with system demand ratios significantly improved price spike prediction accuracy ($MAE = £8.15/\text{MWh}$), allowing the linear program to reliably target peak arbitrage windows.
 ---
 
 ## 🧮 Mathematical Formulation
@@ -155,33 +156,38 @@ $$
 
 ---
 
+### Central Configuration (`config/config.yaml`)
 
+Both `main.py` and `app.py` derive asset, market, and execution defaults directly from `config/config.yaml`:
 
+```yaml
+asset:
+  power_mw: 50.0                    # Rated power capacity (MW)
+  capacity_mwh: 100.0               # Storage capacity (MWh)
+  round_trip_efficiency: 0.88       # Round-trip efficiency (88%)
+  degradation_cost_gbp_mwh: 12.50   # Cell wear cost (£/MWh)
+  min_soc_pct: 0.0                  # Min State of Charge
+  max_soc_pct: 1.0                  # Max State of Charge
+  initial_soc_mwh: 50.0             # Starting & ending SoC
 
+market:
+  settlement_periods: 48            # 30-min settlement intervals
+  time_step_hours: 0.5              # Interval duration
+  base_price_gbp: 65.0              # Baseline price (£/MWh)
+  currency: "GBP"
 
+model:
+  n_estimators: 150
+  max_depth: 5
+  learning_rate: 0.05
+  random_seed: 101
 
-
-
-
-
-
-
-
-
-
-
-## ✨ Key Features
-
-* **Automated Data Ingestion:** Connects directly to the **Elexon Insights API** to retrieve Market Index Prices (`B1770`), Day-Ahead Wind Forecasts (`B1440`), and System Demand.
-* **Feature Engineering:** Constructs time-series lag features ($t-24\text{h}$, $t-48\text{h}$), cyclical calendar encodings (Fourier transforms for diurnal trends), and wind-to-demand supply ratios.
-* **Time-Series ML Pipeline:** Evaluates XGBoost price predictions using expanding-window **Walk-Forward Cross-Validation** to prevent future-data leakage.
-* **Commercial LP Optimizer:** Solves asset dispatch via `PuLP` using the CBC solver, incorporating battery round-trip efficiency and cycle wear parameters.
-* **Financial Backtest Engine:** Benchmarks model performance against a theoretical Perfect Foresight baseline to calculate real-time Capture Rate %.
-* **Automated Visualization:** Produces publication-grade dual-panel plots illustrating prices vs. battery dispatch and real-time State-of-Charge tracking.
-* **Interactive Streamlit Dashboard:** Allows real-time manipulation of battery capacity, power ratings, efficiency, and degradation costs with immediate re-optimization.
-
+paths:
+  raw_data_dir: "data/raw"
+  processed_data_dir: "data/processed"
+  output_plot_path: "docs/dispatch_plot.png"
+```
 ---
-
 ## 📁 Repository Structure
 
 ```text
@@ -213,9 +219,7 @@ gb-bess-dispatch-optimizer/
 ├── main.py                  # Production CLI execution script
 ├── README.md                # Project documentation & performance report
 └── requirements.txt         # Python package dependencies
-
 ```
-
 ---
 
 ## 🚀 Getting Started
@@ -238,55 +242,50 @@ pip install -r requirements.txt
 
 ```
 
-### 2. Central Configuration (`config/config.yaml`)
-
-Both `main.py` and `app.py` derive asset, market, and execution defaults directly from `config/config.yaml`:
-
-```yaml
-asset:
-  power_mw: 50.0                    # Rated power capacity (MW)
-  capacity_mwh: 100.0               # Storage capacity (MWh)
-  round_trip_efficiency: 0.88       # Round-trip efficiency (88%)
-  degradation_cost_gbp_mwh: 12.50   # Cell wear cost (£/MWh)
-  min_soc_pct: 0.0                  # Min State of Charge
-  max_soc_pct: 1.0                  # Max State of Charge
-  initial_soc_mwh: 50.0             # Starting & ending SoC
-
-market:
-  settlement_periods: 48            # 30-min settlement intervals
-  time_step_hours: 0.5              # Interval duration
-  base_price_gbp: 65.0              # Baseline price (£/MWh)
-  currency: "GBP"
-
-model:
-  n_estimators: 150
-  max_depth: 5
-  learning_rate: 0.05
-  random_seed: 101
-
-paths:
-  raw_data_dir: "data/raw"
-  processed_data_dir: "data/processed"
-  output_plot_path: "docs/dispatch_plot.png"
-```
-
-### 3. Run the Pipeline
+### 2. Run the Pipeline
 
 Execute the full end-to-end data ingestion, price forecasting, LP optimization, and backtesting run:
 
 ```bash
 python main.py
-
 ```
+Terminal Output:
+```text
+⚡ Launching GB BESS Price Forecasting & Dispatch Optimizer...
 
-### 4. Launch Interactive Web App
+📥 [1/4] Ingesting market data...
+🛠️ [2/4] Engineering time-series features...
+🤖 [3/4] Training XGBoost price forecaster...
+🧮 [4/4] Solving linear program & dual-pass benchmark...
+📈 Generating publication-grade dispatch visualization...
 
+=======================================================
+ 📊 DAILY DISPATCH OPTIMIZATION SUMMARY REPORT
+=======================================================
+ Asset Rating         : 50.0 MW / 100.0 MWh
+ Round-Trip Efficiency: 88.0%
+ Gross Arbitrage Rev  : £2,363.92
+ Degradation Penalty  : £1,252.56
+ Model Net Revenue    : £1,111.35
+ Perfect Foresight Rev: £2,689.65
+ Financial Capture    : 41.3%
+ Equivalent Cycles    : 0.50 EFC/day
+=======================================================
+
+✅ Pipeline complete! Chart saved to 'docs/dispatch_plot.png'.
+```
+Dispatch Profile Plot
+
+![Plot Description](https://github.com/winengewe/gb-bess-dispatch-optimizer/blob/c342ea064840c612c0aadf4b471bfc28c4f6c3fd/docs/dispatch_plot.png)
+
+### 3. Launch Web Dashboard (`app.py`)
+Start the interactive Streamlit web app:
 ```bash
 streamlit run app.py
 ```
+Open http://localhost:8501 in your browser to interactively tweak battery power/capacity, efficiency, degradation penalties, and market seeds.
 
 ---
-
 ## 🛠 Tech Stack
 
 * **Language:** Python 3.10+
@@ -296,7 +295,6 @@ streamlit run app.py
 * **API Ingestion:** Requests / Elexon Insights API (B1770 / B1440)
 * **Web Dashboard:** Streamlit
 * **Data Visualization:** Matplotlib
-
 ---
 
 ## 📜 License
