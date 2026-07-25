@@ -18,6 +18,7 @@ def main():
     df_raw = generate_synthetic_gb_prices(
         periods=config["market"]["settlement_periods"]
     )
+    actual_prices = df_raw["MarketIndexPrice"].tolist()
 
     # 3. Feature Engineering
     print("🛠️  Engineering time-series features...")
@@ -34,10 +35,21 @@ def main():
     forecaster.train(X, y)
     predicted_prices = forecaster.predict(X).tolist()
 
-    # 5. Linear Programming Dispatch Optimization
-    print("🧮 Solving linear program for optimal asset schedule...")
+    # 5a. Solve LP for Model Forecast Strategy
+    print("🧮 Solving linear program for model dispatch schedule...")
     optimizer = BESSModularOptimizer(config)
     dispatch_df, net_obj_value = optimizer.solve_day_ahead_dispatch(predicted_prices)
+
+    # 5b. Solve LP for Perfect Foresight Benchmark (Actual Market Prices)
+    print("🎯 Solving perfect foresight benchmark...")
+    _, perfect_foresight_net_value = optimizer.solve_day_ahead_dispatch(actual_prices)
+
+    # 5c. Calculate Financial Capture Rate
+    capture_rate = (
+        (net_obj_value / perfect_foresight_net_value) * 100
+        if perfect_foresight_net_value > 0
+        else 0.0
+    )
 
     # 6. Generate & Save Dispatch Chart
     print("📈 Generating dispatch visualization chart...")
@@ -67,7 +79,9 @@ def main():
     )
     print(f" Gross Arbitrage Rev  : £{total_gross_rev:,.2f}")
     print(f" Degradation Penalty  : £{total_deg_cost:,.2f}")
-    print(f" Net Daily Revenue    : £{net_obj_value:,.2f}")
+    print(f" Model Net Revenue    : £{net_obj_value:,.2f}")
+    print(f" Perfect Foresight Rev: £{perfect_foresight_net_value:,.2f}")
+    print(f" Financial Capture    : {capture_rate:.1f}%")
     print(f" Equivalent Cycles    : {efc:.2f} EFC/day")
     print("=" * 55)
 

@@ -19,6 +19,7 @@ Battery Energy Storage Systems (BESS) capture value through wholesale market arb
 Operating a commercial BESS asset requires:
 1. **Accurate Price Forecasting:** Predicting volatile day-ahead wholesale price profiles influenced by wind outturn and system load.
 2. **Constraint-Aware Optimization:** Scheduling charge/discharge profiles under strict round-trip efficiency losses, capacity bounds, and battery degradation penalties.
+3. **Capture Rate Analysis:** Quantifying strategy performance against a theoretical Perfect Foresight benchmark to evaluate model error impact.
 
 ---
 
@@ -43,6 +44,10 @@ Operating a commercial BESS asset requires:
                                      ▼
                      [ FINANCIAL BACKTEST ENGINE ]
                  (Foresight Gap & Capture Rate Analysis)
+                                     │
+                                     ▼
+                          [ VISUALIZATION & REPORT ]
+                      (Matplotlib Profile & KPI Summary)
 
 ```
 
@@ -73,16 +78,22 @@ $$
 $$
 
 2. **Power & Capacity Limits:**
-   $$0 \le P_{\text{ch}, t} \le P_{\text{max}} \quad (50 \text{ MW})$$
-   $$0 \le P_{\text{dis}, t} \le P_{\text{max}} \quad (50 \text{ MW})$$
+$$
+0 \le P_{\text{ch}, t} \le P_{\text{max}} \quad (50 \text{ MW})
+$$
+
+$$
+0 \le P_{\text{dis}, t} \le P_{\text{max}} \quad (50 \text{ MW})
+$$
    
 $$
 \text{SoC}_{\text{min}} \le \text{SoC}_t \le \text{SoC}_{\text{max}} \quad (0 \le \text{SoC}_t \le 100 \text{ MWh})
 $$
 
-
 3. **Round-Trip Efficiency Split ($\eta_{\text{rt}} = 88\%$):**
-$$\eta_{\text{ch}} = \eta_{\text{dis}} = \sqrt{\eta_{\text{rt}}} \approx 0.9381$$
+$$\
+eta_{\text{ch}} = \eta_{\text{dis}} = \sqrt{\eta_{\text{rt}}} \approx 0.9381
+$$
 
 4. **Terminal SoC Boundary Condition:**
    
@@ -98,8 +109,8 @@ $$
 * **Feature Engineering:** Constructs time-series lag features ($t-24\text{h}$, $t-48\text{h}$), cyclical calendar encodings (Fourier transforms for diurnal trends), and wind-to-demand supply ratios.
 * **Time-Series ML Pipeline:** Evaluates XGBoost price predictions using expanding-window **Walk-Forward Cross-Validation** to prevent future-data leakage.
 * **Commercial LP Optimizer:** Solves asset dispatch via `PuLP` using the CBC solver, incorporating battery round-trip efficiency and cycle wear parameters.
+* **Financial Backtest Engine:** Benchmarks model performance against a theoretical Perfect Foresight baseline to calculate real-time Capture Rate %.
 * **Automated Visualization:** Produces publication-grade dual-panel plots illustrating prices vs. battery dispatch and real-time State-of-Charge tracking.
-* **Foresight Gap Analysis:** Computes the **Capture Rate (%)** by comparing model dispatch performance against an idealized "Perfect Foresight" benchmark.
 
 ---
 
@@ -117,11 +128,7 @@ gb-bess-dispatch-optimizer/
 │
 ├── docs/                    # Output visualizations & diagrams
 │   └── dispatch_plot.png
-│
-├── notebooks/               # Exploratory Data Analysis & POCs
-│   ├── 01_elexon_eda.ipynb
-│   └── 02_lp_proof_of_concept.ipynb
-│
+││
 ├── src/                     # Core Production Modules
 │   ├── __init__.py
 │   ├── data_ingestion.py   # Elexon API wrapper & multi-period aggregator
@@ -129,7 +136,6 @@ gb-bess-dispatch-optimizer/
 │   ├── model.py            # XGBoost training & walk-forward validation
 │   ├── optimizer.py        # PuLP linear optimization formulation
 │   └── visualization.py    # Matplotlib two-panel dispatch chart generator
-│   └── backtest.py         # Performance reporting & capture rate metrics
 │
 ├── .gitignore
 ├── LICENSE
@@ -184,15 +190,18 @@ market:
 Execute the full end-to-end data ingestion, price forecasting, LP optimization, and backtesting run:
 
 ```bash
-python main.py --start-date 2025-01-01 --end-date 2025-06-01 --save-plots
+python main.py
 
 ```
 
 ---
 
-## 📊 Sample Results
+## 📊 Performance & Optimization Summary
 
-Backtest evaluation performed over a 30-day unseen test horizon:
+### Dispatch Profile Plot
+
+### 30-Day Out-of-Sample Backtest Results
+Backtest evaluation performed over a 30-day unseen test horizon across 1,440 settlement periods:
 
 | Metric | Naive Strategy (Historical Avg) | XGBoost Strategy (Model) | Perfect Foresight (Benchmark) |
 | --- | --- | --- | --- |
@@ -205,6 +214,21 @@ Backtest evaluation performed over a 30-day unseen test horizon:
 
 * **Degradation Impact:** Adding the £12.50/MWh degradation penalty successfully eliminated low-margin micro-cycling, reducing daily battery wear by **21%** while preserving **95%+** of available arbitrage value.
 * **Forecast Value:** The XGBoost model achieved an **87.8% Capture Rate** relative to perfect market foresight, proving that accurate wind-to-demand ratio features capture peak price spikes effectively.
+* **
+
+### Single-Day Execution Snapshot (main.py Console Output)
+=======================================================
+ 📊 DAILY DISPATCH OPTIMIZATION SUMMARY REPORT
+=======================================================
+ Asset Rating         : 50.0 MW / 100.0 MWh
+ Round-Trip Efficiency: 88.0%
+ Gross Arbitrage Rev  : £8,926.96
+ Degradation Penalty  : £4,507.95
+ Model Net Revenue    : £4,419.01
+ Perfect Foresight Rev: £5,033.04
+ Financial Capture    : 87.8%
+ Equivalent Cycles    : 1.69 EFC/day
+=======================================================
 
 ---
 
@@ -215,7 +239,7 @@ Backtest evaluation performed over a 30-day unseen test horizon:
 * **Machine Learning:** XGBoost, Scikit-Learn
 * **Optimization:** PuLP (CBC Solver)
 * **API Ingestion:** Requests / Elexon Insights API
-* **Data Visualization:** Plotly, Matplotlib, Seaborn
+* **Data Visualization:** Matplotlib
 
 ---
 
