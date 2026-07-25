@@ -1,11 +1,12 @@
 # ⚡ Great Britain BESS Price Forecasting & Dispatch Optimizer
 
-An end-to-end quantitative energy pipeline that ingests live UK power market data from the **Elexon Insights API**, predicts 30-minute day-ahead electricity prices using **XGBoost**, and formulates a **Linear Programming (LP)** model in **PuLP** to optimize revenue dispatch for a 50MW / 100MWh Battery Energy Storage System (BESS).
+An end-to-end quantitative energy pipeline that ingests live UK power market data from the **Elexon Insights API**, predicts 30-minute day-ahead electricity prices using **XGBoost**, and formulates a **Linear Programming (LP)** model in **PuLP** to optimize revenue dispatch for a 50MW / 100MWh Battery Energy Storage System (BESS). Includes an interactive **Streamlit web dashboard** for real-time asset parameter sensitivity analysis.
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Domain](https://img.shields.io/badge/Domain-Energy%20Trading%20%26%20Flexibility-green.svg)]()
 [![Optimization](https://img.shields.io/badge/Solver-PuLP%20%2F%20CBC-orange.svg)](https://coin-or.github.io/pulp/)
 [![ML Framework](https://img.shields.io/badge/ML-XGBoost-red.svg)](https://xgboost.readthedocs.io/)
+[![UI](https://img.shields.io/badge/Dashboard-Streamlit-red.svg)](https://streamlit.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -26,28 +27,30 @@ Operating a commercial BESS asset requires:
 ## 🏗 System Architecture
 
 ```
-                            [ ELEXON INSIGHTS API ]
-                        (B1770 / B1440 / Demand Data)
-                                     │
-                                     ▼
-                         [ FEATURE ENGINEERING ]
-                     (Lags, Fourier Terms, Wind/Load)
-                                     │
-                                     ▼
-                        [ XGBOOST PRICE ENGINE ]
-                     (30-Min Settlement Forecasts)
-                                     │
-                                     ▼
-                      [ PULP DISPATCH OPTIMIZER ]
-                   (Linear Program with Degradation)
-                                     │
-                                     ▼
-                     [ FINANCIAL BACKTEST ENGINE ]
-                 (Foresight Gap & Capture Rate Analysis)
-                                     │
-                                     ▼
-                          [ VISUALIZATION & REPORT ]
-                      (Matplotlib Profile & KPI Summary)
+
+                              [ ELEXON INSIGHTS API ]
+                          (B1770 / B1440 / Demand Data)
+                                         │
+                                         ▼
+                             [ FEATURE ENGINEERING ]
+                         (Lags, Fourier Terms, Wind/Load)
+                                         │
+                                         ▼
+                            [ XGBOOST PRICE ENGINE ]
+                         (30-Min Settlement Forecasts)
+                                         │
+                                         ▼
+                          [ PULP DISPATCH OPTIMIZER ]
+                       (Linear Program with Degradation)
+                                         │
+                                         ▼
+                           [ FINANCIAL BACKTEST ENGINE ]
+                       (Model vs. Perfect Foresight Capture %)
+                                         │
+                     ┌───────────────────┴───────────────────┐
+                     ▼                                       ▼
+          [ CLI PIPELINE (main.py) ]             [ INTERACTIVE UI (app.py) ]
+       (Automated KPI Report & Chart)             (Streamlit Real-Time Sliders)
 
 ```
 
@@ -97,7 +100,7 @@ $$\
 eta_{\text{ch}} = \eta_{\text{dis}} = \sqrt{\eta_{\text{rt}}} \approx 0.9381
 $$
 
-5. **Terminal SoC Boundary Condition:**
+4. **Terminal SoC Boundary Condition:**
    
 $$
 \text{SoC}_0 = \text{SoC}_T = 0.50 \cdot \text{SoC}_{\text{max}} \quad (50 \text{ MWh})
@@ -113,6 +116,7 @@ $$
 * **Commercial LP Optimizer:** Solves asset dispatch via `PuLP` using the CBC solver, incorporating battery round-trip efficiency and cycle wear parameters.
 * **Financial Backtest Engine:** Benchmarks model performance against a theoretical Perfect Foresight baseline to calculate real-time Capture Rate %.
 * **Automated Visualization:** Produces publication-grade dual-panel plots illustrating prices vs. battery dispatch and real-time State-of-Charge tracking.
+* **Interactive Streamlit Dashboard:** Allows real-time manipulation of battery capacity, power ratings, efficiency, and degradation costs with immediate re-optimization.
 
 ---
 
@@ -197,6 +201,13 @@ python main.py
 
 ```
 
+### 4. Launch Interactive Web App
+
+```bash
+streamlit run app.py
+
+```
+
 ---
 
 ## 📊 Performance & Optimization Summary
@@ -219,7 +230,6 @@ Backtest evaluation performed over a 30-day unseen test horizon across 1,440 set
 
 * **Degradation Impact:** Adding the £12.50/MWh degradation penalty successfully eliminated low-margin micro-cycling, reducing daily battery wear by **21%** while preserving **95%+** of available arbitrage value.
 * **Forecast Value:** The XGBoost model achieved an **87.8% Capture Rate** relative to perfect market foresight, proving that accurate wind-to-demand ratio features capture peak price spikes effectively.
-* **
 
 ### Single-Day Execution Snapshot ( `main.py` Console Output)
 
@@ -246,6 +256,7 @@ Backtest evaluation performed over a 30-day unseen test horizon across 1,440 set
 * **Machine Learning:** XGBoost, Scikit-Learn
 * **Optimization:** PuLP (CBC Solver)
 * **API Ingestion:** Requests / Elexon Insights API
+* **Web Dashboard:** Streamlit
 * **Data Visualization:** Matplotlib
 
 ---
