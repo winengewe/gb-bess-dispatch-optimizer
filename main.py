@@ -1,3 +1,12 @@
+"""
+main.py
+
+Production CLI Orchestrator for the GB BESS Dispatch Optimizer.
+Preserves OOP module structure (FeatureEngineer, PriceForecaster, BESSModularOptimizer)
+while executing data ingestion, feature engineering, model training, ML validation,
+PuLP dual-pass LP optimization, physical/economic invariant checks, and visualization.
+"""
+
 import os
 import yaml
 import pandas as pd
@@ -7,18 +16,23 @@ from src.features import FeatureEngineer, get_feature_columns
 from src.model import PriceForecaster
 from src.optimizer import BESSModularOptimizer
 from src.visualization import plot_bess_dispatch
+from src.validation import evaluate_forecaster, validate_dispatch_schedule
 
 
 def main():
     print("⚡ Launching GB BESS Price Forecasting & Dispatch Optimizer...\n")
 
+    # --------------------------------------------------------------------------
     # 1. Load Central Configuration
+    # --------------------------------------------------------------------------
     config_path = os.path.join("config", "config.yaml")
-    with open(config_path, "r") as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
+    # --------------------------------------------------------------------------
     # 2. Ingest Historical Training Data & Day-Ahead Target Data
-    print("📥 [1/4] Ingesting market data...")
+    # --------------------------------------------------------------------------
+    print("📥 [1/5] Ingesting market data...")
     target_periods = config["market"]["settlement_periods"]  # 48 periods
     train_periods = 1440  # 30-day historical horizon for ML training
     seed = config["model"]["random_seed"]
@@ -28,8 +42,10 @@ def main():
         periods=target_periods, random_seed=seed
     )
 
+    # --------------------------------------------------------------------------
     # 3. Feature Engineering
-    print("🛠️  [2/4] Engineering time-series features...")
+    # --------------------------------------------------------------------------
+    print("🛠️  [2/5] Engineering time-series features...")
     fe = FeatureEngineer()
     df_train_feat = fe.transform(df_train_raw)
     df_target_feat = fe.transform(df_target_raw)
@@ -39,14 +55,37 @@ def main():
     X_target = df_target_feat[feature_cols]
     actual_prices = df_target_raw["MarketIndexPrice"].values
 
+    # --------------------------------------------------------------------------
     # 4. Train XGBoost Forecaster & Predict Day-Ahead Prices
-    print("🤖 [3/4] Training XGBoost price forecaster...")
+    # --------------------------------------------------------------------------
+    print("🤖 [3/5] Training XGBoost price forecaster...")
     forecaster = PriceForecaster()
     forecaster.fit(X_train, y_train)
     predicted_prices = forecaster.predict(X_target)
 
-    # 5. Solve Dual-Pass Linear Program Benchmark (Model vs. Perfect Foresight)
-    print("🧮 [4/4] Solving linear program & dual-pass benchmark...")
+    # --------------------------------------------------------------------------
+    # 5. ML Model Accuracy Validation
+    # --------------------------------------------------------------------------
+    print("📊 [4/5] Evaluating forecasting accuracy...")
+    # Use persistence baseline (t-24h / 48 settlement periods back) if available
+    naive_baseline = pd.Series(actual_prices).shift(48).bfill()
+    ml_metrics = evaluate_forecaster(
+        y_true=pd.Series(actual_prices),
+        y_pred=pd.Series(predicted_prices),
+        y_baseline=naive_baseline,
+    )
+    print(f"   • MAE            : £{ml_metrics['MAE']:.2f} / MWh")
+    print(f"   • RMSE           : £{ml_metrics['RMSE']:.2f} / MWh")
+    print(f"   • WAPE           : {ml_metrics['WAPE_pct']:.2f}%")
+    if "MAE_Improvement_pct" in ml_metrics:
+        print(
+            f"   • Outperformance : {ml_metrics['MAE_Improvement_pct']:.1f}% improvement over persistence baseline\n"
+        )
+
+    # --------------------------------------------------------------------------
+    # 6. Solve Dual-Pass Linear Program Benchmark (Model vs. Perfect Foresight)
+    # --------------------------------------------------------------------------
+    print("🧮 [5/5] Solving linear program & dual-pass benchmark...")
     optimizer = BESSModularOptimizer(
         power_capacity_mw=config["asset"]["power_mw"],
         energy_capacity_mwh=config["asset"]["capacity_mwh"],
@@ -60,13 +99,23 @@ def main():
     )
     dispatch_df = benchmark["model_dispatch_df"]
 
-    # 6. Generate & Save High-Resolution Dispatch Chart
-    print("📈 Generating publication-grade dispatch visualization...")
+    # --------------------------------------------------------------------------
+    # 7. Physical Capacity & Economic Invariant Validation
+    # --------------------------------------------------------------------------
+    print("🧪 Running physical capacity & hurdle rate invariant assertions...")
+    validate_dispatch_schedule(dispatch_df, config)
+
+    # --------------------------------------------------------------------------
+    # 8. Generate & Save High-Resolution Dispatch Chart
+    # --------------------------------------------------------------------------
+    print("\n📈 Generating publication-grade dispatch visualization...")
     plot_bess_dispatch(
         df_dispatch=dispatch_df, save_path=config["paths"]["output_plot_path"]
     )
 
-    # 7. Print Executive Summary Report
+    # --------------------------------------------------------------------------
+    # 9. Print Executive Summary Report
+    # --------------------------------------------------------------------------
     print("\n" + "=" * 55)
     print(" 📊 DAILY DISPATCH OPTIMIZATION SUMMARY REPORT")
     print("=" * 55)
@@ -84,7 +133,9 @@ def main():
     print(f" Equivalent Cycles    : {benchmark['equivalent_full_cycles']:.2f} EFC/day")
     print("=" * 55)
 
-    # 8. Sample Output Preview
+    # --------------------------------------------------------------------------
+    # 10. Sample Output Preview
+    # --------------------------------------------------------------------------
     print("\nSample Dispatch Output (First 10 Settlement Periods):")
     preview_cols = [
         "SettlementPeriod",
