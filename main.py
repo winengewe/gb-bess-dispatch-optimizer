@@ -23,7 +23,9 @@ def main():
     train_periods = 1440  # 30-day historical horizon for ML training
 
     df_train_raw = generate_synthetic_gb_prices(periods=train_periods, random_seed=42)
-    df_target_raw = generate_synthetic_gb_prices(periods=target_periods, random_seed=101)
+    df_target_raw = generate_synthetic_gb_prices(
+        periods=target_periods, random_seed=101
+    )
 
     # 3. Feature Engineering
     print("🛠️  [2/4] Engineering time-series features...")
@@ -49,28 +51,28 @@ def main():
         energy_capacity_mwh=config["asset"]["capacity_mwh"],
         round_trip_efficiency=config["asset"]["round_trip_efficiency"],
         degradation_cost_per_mwh=config["asset"]["degradation_cost_gbp_mwh"],
-        dt_hours=config["market"]["time_step_hours"]
+        dt_hours=config["market"]["time_step_hours"],
     )
 
     benchmark = optimizer.run_dual_pass_benchmark(
-        forecasted_prices=predicted_prices,
-        actual_prices=actual_prices
+        forecasted_prices=predicted_prices, actual_prices=actual_prices
     )
     dispatch_df = benchmark["model_dispatch_df"]
 
     # 6. Generate & Save High-Resolution Dispatch Chart
     print("📈 Generating publication-grade dispatch visualization...")
-    plot_bess_dispatch(
-        df_dispatch=dispatch_df,
-        save_path="docs/dispatch_plot.png"
-    )
+    plot_bess_dispatch(df_dispatch=dispatch_df, save_path="docs/dispatch_plot.png")
 
     # 7. Print Executive Summary Report
     print("\n" + "=" * 55)
     print(" 📊 DAILY DISPATCH OPTIMIZATION SUMMARY REPORT")
     print("=" * 55)
-    print(f" Asset Rating         : {config['asset']['power_mw']} MW / {config['asset']['capacity_mwh']} MWh")
-    print(f" Round-Trip Efficiency: {config['asset']['round_trip_efficiency'] * 100:.1f}%")
+    print(
+        f" Asset Rating         : {config['asset']['power_mw']} MW / {config['asset']['capacity_mwh']} MWh"
+    )
+    print(
+        f" Round-Trip Efficiency: {config['asset']['round_trip_efficiency'] * 100:.1f}%"
+    )
     print(f" Gross Arbitrage Rev  : £{benchmark['gross_revenue_gbp']:,.2f}")
     print(f" Degradation Penalty  : £{benchmark['degradation_cost_gbp']:,.2f}")
     print(f" Model Net Revenue    : £{benchmark['model_net_revenue_gbp']:,.2f}")
@@ -80,10 +82,16 @@ def main():
     print("=" * 55)
 
     # 8. Sample Output Preview
-    print("\nSample Dispatch Output (First 6 Settlement Periods):")
-    preview_cols = ["SettlementPeriod", "Price_GBP_MWh", "NetPower_MW", "SoC_MWh", "NetRevenue_GBP"]
+    print("\nSample Dispatch Output (First 10 Settlement Periods):")
+    preview_cols = [
+        "SettlementPeriod",
+        "Price_GBP_MWh",
+        "NetPower_MW",
+        "SoC_MWh",
+        "NetRevenue_GBP",
+    ]
     available_preview = [c for c in preview_cols if c in dispatch_df.columns]
-    print(dispatch_df[available_preview].head(6).to_string(index=False))
+    print(dispatch_df[available_preview].head(10).to_string(index=False))
 
     print("\n✅ Pipeline complete! Chart saved to 'docs/dispatch_plot.png'.")
 
