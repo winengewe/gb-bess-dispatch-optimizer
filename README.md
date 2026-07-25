@@ -81,10 +81,10 @@ $$
 $$
 
 
-4. **Round-Trip Efficiency Split ($\eta_{\text{rt}} = 88\%$):**
+3. **Round-Trip Efficiency Split ($\eta_{\text{rt}} = 88\%$):**
 $$\eta_{\text{ch}} = \eta_{\text{dis}} = \sqrt{\eta_{\text{rt}}} \approx 0.9381$$
 
-5. **Terminal SoC Boundary Condition:**
+4. **Terminal SoC Boundary Condition:**
    
 $$
 \text{SoC}_0 = \text{SoC}_T = 0.50 \cdot \text{SoC}_{\text{max}} \quad (50 \text{ MWh})
@@ -98,6 +98,7 @@ $$
 * **Feature Engineering:** Constructs time-series lag features ($t-24\text{h}$, $t-48\text{h}$), cyclical calendar encodings (Fourier transforms for diurnal trends), and wind-to-demand supply ratios.
 * **Time-Series ML Pipeline:** Evaluates XGBoost price predictions using expanding-window **Walk-Forward Cross-Validation** to prevent future-data leakage.
 * **Commercial LP Optimizer:** Solves asset dispatch via `PuLP` using the CBC solver, incorporating battery round-trip efficiency and cycle wear parameters.
+* **Automated Visualization:** Produces publication-grade dual-panel plots illustrating prices vs. battery dispatch and real-time State-of-Charge tracking.
 * **Foresight Gap Analysis:** Computes the **Capture Rate (%)** by comparing model dispatch performance against an idealized "Perfect Foresight" benchmark.
 
 ---
@@ -114,6 +115,9 @@ gb-bess-dispatch-optimizer/
 │   ├── raw/
 │   └── processed/
 │
+├── docs/                    # Output visualizations & diagrams
+│   └── dispatch_plot.png
+│
 ├── notebooks/               # Exploratory Data Analysis & POCs
 │   ├── 01_elexon_eda.ipynb
 │   └── 02_lp_proof_of_concept.ipynb
@@ -124,6 +128,7 @@ gb-bess-dispatch-optimizer/
 │   ├── features.py         # Cyclical encodings, lags, & rolling stats
 │   ├── model.py            # XGBoost training & walk-forward validation
 │   ├── optimizer.py        # PuLP linear optimization formulation
+│   └── visualization.py    # Matplotlib two-panel dispatch chart generator
 │   └── backtest.py         # Performance reporting & capture rate metrics
 │
 ├── .gitignore
@@ -168,9 +173,9 @@ asset:
   degradation_cost_gbp_per_mwh: 12.50
   initial_soc_pct: 0.50
 
-model:
-  forecast_horizon_periods: 48
-  test_split_days: 30
+market:
+  time_step_hours: 0.5
+  settlement_periods: 48
 
 ```
 
