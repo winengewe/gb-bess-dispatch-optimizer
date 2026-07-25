@@ -162,7 +162,7 @@ Clone the repository and set up your Python environment:
 
 ```bash
 # Clone repository
-git clone [https://github.com/your-username/gb-bess-dispatch-optimizer.git](https://github.com/your-username/gb-bess-dispatch-optimizer.git)
+git clone [https://github.com/winengewe/gb-bess-dispatch-optimizer.git](https://github.com/winengewe/gb-bess-dispatch-optimizer.git)
 cd gb-bess-dispatch-optimizer
 
 # Create and activate virtual environment
