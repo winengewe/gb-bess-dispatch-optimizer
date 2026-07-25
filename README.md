@@ -188,28 +188,30 @@ $$
 gb-bess-dispatch-optimizer/
 │
 ├── config/
-│   └── config.yaml          # Asset specifications & market parameters
+│   └── config.yaml          # Single source of truth for asset & market settings
 │
 ├── data/                    # Managed data directories
-│   ├── raw/                 # Ingested market price & forecast data
-│   └── processed/           # ML feature matrices
+│   ├── raw/
+│   │   └── .gitkeep         # Preserves raw folder in Git while ignoring large datasets
+│   └── processed/
+│       └── .gitkeep         # Preserves processed folder in Git while ignoring feature matrices
 │
-├── docs/                    # Generated output figures
-│   └── dispatch_plot.png    # High-res dispatch visualization
+├── docs/                    # Output figures & assets
+│   └── dispatch_plot.png    # High-resolution dispatch visualization
 │
 ├── src/                     # Core Production Package
-│   ├── __init__.py          # Marks src as a Python package
-│   ├── data_ingestion.py    # Elexon API wrapper & price generator
-│   ├── features.py          # Lag & Fourier feature engineering
-│   ├── model.py             # XGBoost forecasting pipeline
-│   ├── optimizer.py         # PuLP linear programming solver
-│   └── visualization.py     # Matplotlib plot generator
+│   ├── __init__.py          # Package marker
+│   ├── data_ingestion.py    # Elexon Insights API wrapper & synthetic price generator
+│   ├── features.py          # Time-series feature engineering pipeline (lags & Fourier terms)
+│   ├── model.py             # XGBoost price forecaster
+│   ├── optimizer.py         # PuLP LP solver & Dual-Pass benchmark engine
+│   └── visualization.py     # Matplotlib plot renderer
 │
-├── .gitignore               # Excludes cache, virtual environments, raw dumps
-├── app.py                   # Streamlit web dashboard
+├── .gitignore               # Ignores venvs, bytecode, data dumps, and IDE files
+├── app.py                   # Streamlit interactive web dashboard
 ├── LICENSE                  # MIT License
-├── main.py                  # CLI execution & backtest pipeline
-├── README.md                # Documentation & performance summary
+├── main.py                  # Production CLI execution script
+├── README.md                # Project documentation & performance report
 └── requirements.txt         # Python package dependencies
 
 ```
