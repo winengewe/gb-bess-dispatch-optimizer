@@ -231,8 +231,8 @@ Backtest evaluation performed over a 30-day unseen test horizon across 1,440 set
 | **Gross Arbitrage Rev** | £8,926.96 |
 | **Degradation Penalty** | £4,507.95 |
 | **Model Net Revenue** | **£4,419.01** |
-| **Perfect Foresight Rev** | £5,033.04 |
-| **Financial Capture** | **87.8%** |
+| **Perfect Foresight Rev** | £4,690.90 |
+| **Financial Capture** | **94.2%** |
 | **Equivalent Cycles<** | 1.69 EFC/day |
 
 ---
