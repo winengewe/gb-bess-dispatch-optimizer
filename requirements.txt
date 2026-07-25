@@ -1,9 +1,18 @@
+# Data Ingestion & API
+requests>=2.31.0
+
+# Data Processing & Numerical Computation
 pandas>=2.0.0
 numpy>=1.24.0
-pulp>=2.7.0
+pyyaml>=6.0
+
+# Machine Learning & Metrics
 xgboost>=2.0.0
 scikit-learn>=1.3.0
-pyyaml>=6.0.0
-requests>=2.31.0
+
+# Linear Programming Optimization
+pulp>=2.7.0
+
+# Visualization & Interactive UI
 matplotlib>=3.7.0
-streamlit>=1.25.0
+streamlit>=1.30.0
