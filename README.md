@@ -67,18 +67,28 @@ Where:
 ### Constraints
 
 1. **State of Charge ($\text{SoC}$) Energy Conservation:**
-   $$\text{SoC}_t = \text{SoC}_{t-1} + \left( P_{\text{ch}, t} \cdot \eta_{\text{ch}} - \frac{P_{\text{dis}, t}}{\eta_{\text{dis}}} \right) \cdot \Delta t \quad \forall t \in \{1, \dots, T\}$$
+
+$$
+\text{SoC}_t = \text{SoC}_{t-1} + \left( P_{\text{ch}, t} \cdot \eta_{\text{ch}} - \frac{P_{\text{dis}, t}}{\eta_{\text{dis}}} \right) \cdot \Delta t \quad \forall t \in \{1, \dots, T\}
+$$
 
 2. **Power & Capacity Limits:**
    $$0 \le P_{\text{ch}, t} \le P_{\text{max}} \quad (50 \text{ MW})$$
    $$0 \le P_{\text{dis}, t} \le P_{\text{max}} \quad (50 \text{ MW})$$
-   $$\text{SoC}_{\text{min}} \le \text{SoC}_t \le \text{SoC}_{\text{max}} \quad (0 \le \text{SoC}_t \le 100 \text{ MWh})$$
+   
+$$
+\text{SoC}_{\text{min}} \le \text{SoC}_t \le \text{SoC}_{\text{max}} \quad (0 \le \text{SoC}_t \le 100 \text{ MWh})
+$$
 
-3. **Round-Trip Efficiency Split ($\eta_{\text{rt}} = 88\%$):**
-   $$\eta_{\text{ch}} = \eta_{\text{dis}} = \sqrt{\eta_{\text{rt}}} \approx 0.9381$$
 
-4. **Terminal SoC Boundary Condition:**
-   $$\text{SoC}_0 = \text{SoC}_T = 0.50 \cdot \text{SoC}_{\text{max}} \quad (50 \text{ MWh})$$
+4. **Round-Trip Efficiency Split ($\eta_{\text{rt}} = 88\%$):**
+$$\eta_{\text{ch}} = \eta_{\text{dis}} = \sqrt{\eta_{\text{rt}}} \approx 0.9381$$
+
+5. **Terminal SoC Boundary Condition:**
+   
+$$
+\text{SoC}_0 = \text{SoC}_T = 0.50 \cdot \text{SoC}_{\text{max}} \quad (50 \text{ MWh})
+$$
 
 ---
 
