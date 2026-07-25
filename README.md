@@ -255,7 +255,7 @@ Backtest evaluation performed over a 30-day unseen test horizon across 1,440 set
 * **Data Processing:** Pandas, NumPy
 * **Machine Learning:** XGBoost, Scikit-Learn
 * **Optimization:** PuLP (CBC Solver)
-* **API Ingestion:** Requests / Elexon Insights API
+* **API Ingestion:** Requests / Elexon Insights API (B1770 / B1440)
 * **Web Dashboard:** Streamlit
 * **Data Visualization:** Matplotlib
 
