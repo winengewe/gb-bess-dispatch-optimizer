@@ -21,10 +21,11 @@ def main():
     print("📥 [1/4] Ingesting market data...")
     target_periods = config["market"]["settlement_periods"]  # 48 periods
     train_periods = 1440  # 30-day historical horizon for ML training
+    seed = config["model"]["random_seed"]
 
     df_train_raw = generate_synthetic_gb_prices(periods=train_periods, random_seed=42)
     df_target_raw = generate_synthetic_gb_prices(
-        periods=target_periods, random_seed=101
+        periods=target_periods, random_seed=seed
     )
 
     # 3. Feature Engineering
@@ -61,7 +62,9 @@ def main():
 
     # 6. Generate & Save High-Resolution Dispatch Chart
     print("📈 Generating publication-grade dispatch visualization...")
-    plot_bess_dispatch(df_dispatch=dispatch_df, save_path="docs/dispatch_plot.png")
+    plot_bess_dispatch(
+        df_dispatch=dispatch_df, save_path=config["paths"]["output_plot_path"]
+    )
 
     # 7. Print Executive Summary Report
     print("\n" + "=" * 55)
@@ -93,7 +96,9 @@ def main():
     available_preview = [c for c in preview_cols if c in dispatch_df.columns]
     print(dispatch_df[available_preview].head(10).to_string(index=False))
 
-    print("\n✅ Pipeline complete! Chart saved to 'docs/dispatch_plot.png'.")
+    print(
+        f"\n✅ Pipeline complete! Chart saved to '{config['paths']['output_plot_path']}'."
+    )
 
 
 if __name__ == "__main__":
