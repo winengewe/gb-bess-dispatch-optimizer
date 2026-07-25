@@ -1,126 +1,117 @@
 import numpy as np
 import pandas as pd
-
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.model_selection import TimeSeriesSplit
 import xgboost as xgb
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error
+from typing import Dict, List, Optional, Tuple
 
 
 class PriceForecaster:
     """
-    XGBoost Time-Series Forecasting Pipeline with Walk-Forward Cross-Validation.
+    XGBoost-based time-series regressor for predicting 30-minute 
+    GB wholesale electricity market prices.
     """
 
-    def __init__(self, params: dict | None = None):
-        self.default_params = {
-            "n_estimators": 300,
-            "max_depth": 6,
-            "learning_rate": 0.03,
-            "subsample": 0.8,
-            "colsample_bytree": 0.8,
-            "random_state": 42,
-            "objective": "reg:squarederror",
-            "n_jobs": -1,
-        }
-        self.params = params if params else self.default_params
-        self.model = xgb.XGBRegressor(**self.params)
+    def __init__(
+        self,
+        n_estimators: int = 150,
+        max_depth: int = 5,
+        learning_rate: float = 0.05,
+        subsample: float = 0.8,
+        colsample_bytree: float = 0.8,
+        random_state: int = 42
+    ):
+        self.feature_names: Optional[List[str]] = None
+        self.model = xgb.XGBRegressor(
+            n_estimators=n_estimators,
+            max_depth=max_depth,
+            learning_rate=learning_rate,
+            subsample=subsample,
+            colsample_bytree=colsample_bytree,
+            random_state=random_state,
+            objective="reg:squarederror"
+        )
 
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> "PriceForecaster":
         """
-        Fits the XGBoost Regressor model on training data.
+        Trains the XGBoost regressor on engineered time-series features.
         """
-        self.model.fit(X_train, y_train)
+        self.feature_names = list(X.columns)
+        self.model.fit(X, y)
+        return self
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """
-        Generates point forecasts for input features.
+        Generates day-ahead wholesale price forecasts (£/MWh).
         """
-        return self.model.predict(X)
+        if self.feature_names is None:
+            raise ValueError("Model has not been trained yet. Call `.fit()` first.")
+        
+        # Ensure column order matches training
+        X_aligned = X[self.feature_names]
+        predictions = self.model.predict(X_aligned)
+        
+        return np.round(predictions, 2)
 
-    def evaluate(self, y_true: pd.Series, y_pred: np.ndarray) -> dict[str, float]:
+    def evaluate(self, X_test: pd.DataFrame, y_test: pd.Series) -> Dict[str, float]:
         """
-        Calculates regression metrics (MAE, RMSE, MAPE).
+        Evaluates forecast accuracy against actual market settlement prices.
         """
-        mae = mean_absolute_error(y_true, y_pred)
-        rmse = np.sqrt(mean_squared_error(y_true, y_pred))
-
-        # Avoid division by zero in MAPE
-        non_zero_mask = y_true != 0
-        mape = (
-            np.mean(
-                np.abs(
-                    (y_true[non_zero_mask] - y_pred[non_zero_mask])
-                    / y_true[non_zero_mask]
-                )
-            )
-            * 100
-        )
+        preds = self.predict(X_test)
+        mae = mean_absolute_error(y_test, preds)
+        rmse = root_mean_squared_error(y_test, preds)
+        
+        # Calculate Mean Absolute Percentage Error (handling potential near-zero prices)
+        non_zero_mask = y_test != 0
+        mape = np.mean(np.abs((y_test[non_zero_mask] - preds[non_zero_mask]) / y_test[non_zero_mask])) * 100
 
         return {
-            "MAE_GBP_MWh": float(np.round(mae, 2)),
-            "RMSE_GBP_MWh": float(np.round(rmse, 2)),
-            "MAPE_pct": float(np.round(mape, 2)),
+            "MAE_GBP": round(float(mae), 2),
+            "RMSE_GBP": round(float(rmse), 2),
+            "MAPE_pct": round(float(mape), 2)
         }
 
-    def walk_forward_cv(
-        self,
-        df: pd.DataFrame,
-        feature_cols: list[str],
-        target_col: str,
-        n_splits: int = 5,
-    ) -> tuple[pd.DataFrame, dict[str, float]]:
+    def get_feature_importance(() -> pd.DataFrame:
         """
-        Executes Expanding-Window Walk-Forward Cross Validation across time-series splits.
+        Extracts feature importances to inspect model drivers.
         """
-        tscv = TimeSeriesSplit(n_splits=n_splits)
-        cv_scores = []
-        predictions_list = []
-
-        X = df[feature_cols]
-        y = df[target_col]
-
-        for fold, (train_idx, test_idx) in enumerate(tscv.split(X)):
-            X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
-            y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
-
-            # Fit model on training fold
-            fold_model = xgb.XGBRegressor(**self.params)
-            fold_model.fit(X_train, y_train)
-
-            # Predict on unseen test fold
-            preds = fold_model.predict(X_test)
-
-            metrics = self.evaluate(y_test, preds)
-            metrics["fold"] = fold + 1
-            cv_scores.append(metrics)
-
-            fold_preds_df = pd.DataFrame(
-                {"Actual": y_test.values, "Predicted": preds}, index=y_test.index
-            )
-            predictions_list.append(fold_preds_df)
-
-        results_df = pd.concat(predictions_list)
-
-        # Calculate aggregate metrics across all CV folds
-        avg_metrics = {
-            "Avg_MAE_GBP_MWh": float(
-                np.round(np.mean([s["MAE_GBP_MWh"] for s in cv_scores]), 2)
-            ),
-            "Avg_RMSE_GBP_MWh": float(
-                np.round(np.mean([s["RMSE_GBP_MWh"] for s in cv_scores]), 2)
-            ),
-        }
-
-        return results_df, avg_metrics
-
-    def get_feature_importances(self, feature_names: list[str]) -> pd.DataFrame:
-        """
-        Extracts gain feature importance.
-        """
-        importance = self.model.feature_importances_
-        df_imp = (
-            pd.DataFrame({"Feature": feature_names, "Importance": importance})
-            .sort_values(by="Importance", ascending=False)
-            .reset_index(drop=True)
-        )
+        if self.feature_names is None:
+            raise ValueError("Model has not been trained yet.")
+            
+        importances = self.model.feature_importances_
+        df_imp = pd.DataFrame({
+            "Feature": self.feature_names,
+            "Importance": importances
+        }).sort_values(by="Importance", ascending=False).reset_index(drop=True)
+        
         return df_imp
+
+
+if __name__ == "__main__":
+    from src.data_ingestion import generate_synthetic_gb_prices
+    from src.features import FeatureEngineer, get_feature_columns
+
+    # 1. Generate 30 days of data (1,440 settlement periods)
+    raw_df = generate_synthetic_gb_prices(periods=1440, random_seed=42)
+    
+    # 2. Build feature matrix
+    fe = FeatureEngineer()
+    df_features = fe.transform(raw_df)
+    
+    feature_cols = get_feature_columns()
+    X = df_features[feature_cols]
+    y = df_features["MarketIndexPrice"]
+
+    # 3. Time-based train/test split (80% train, 20% test)
+    split_idx = int(len(X) * 0.8)
+    X_train, X_test = X.iloc[:split_idx], X.iloc[split_idx:]
+    y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
+
+    # 4. Train and evaluate
+    forecaster = PriceForecaster()
+    forecaster.fit(X_train, y_train)
+    metrics = forecaster.evaluate(X_test, y_test)
+
+    print("✅ Model Training & Evaluation Complete:")
+    print(f"Test Set Metrics: {metrics}")
+    print("\nTop 5 Feature Importances:")
+    print(forecaster.get_feature_importance().head())
