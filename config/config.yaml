@@ -1,0 +1,10 @@
+asset:
+  power_mw: 50.0
+  capacity_mwh: 100.0
+  round_trip_efficiency: 0.88
+  degradation_cost_gbp_per_mwh: 12.50
+  initial_soc_pct: 0.50
+
+market:
+  time_step_hours: 0.5
+  settlement_periods: 48
