@@ -202,6 +202,8 @@ python main.py
 
 ### Dispatch Profile Plot
 
+![Plot Description](https://github.com/winengewe/bess-price-forecasting-optimization/blob/88107da41633111bd9b5ebe475eac130d0369a68/docs/dispatch_plot.png)
+
 ### 30-Day Out-of-Sample Backtest Results
 Backtest evaluation performed over a 30-day unseen test horizon across 1,440 settlement periods:
 
