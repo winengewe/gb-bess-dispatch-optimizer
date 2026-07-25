@@ -1,0 +1,41 @@
+# ==========================================
+# 1. Sensitive Data & Secrets
+# ==========================================
+.env
+*.env
+*.pem
+*.key
+config/secrets.yaml
+
+# ==========================================
+# 2. Virtual Environments & Packages
+# ==========================================
+venv/
+.venv/
+env/
+ENV/
+
+# ==========================================
+# 3. Large Datasets & Local Data
+# ==========================================
+data/raw/*
+!data/raw/.gitkeep
+*.csv
+*.parquet
+*.sqlite3
+
+# ==========================================
+# 4. Python Bytecode & Cache
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ==========================================
+# 5. IDE & Operating System Files
+# ==========================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
