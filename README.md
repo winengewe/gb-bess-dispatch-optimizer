@@ -214,6 +214,10 @@ gb-bess-dispatch-optimizer/
 │   ├── validation.py        # ML metrics & LP physical invariant assertions
 │   └── visualization.py     # Matplotlib plot renderer
 │
+├── tests/                   # Core Production Package
+│   ├── conftest.py          # Reusable pytest fixtures (sample asset config, dummy dispatch DataFrames)
+│   └── test_validation.py   # Unit tests for ML evaluation metrics and physical assertion triggers
+│
 ├── .gitignore               # Ignores venvs, bytecode, data dumps, and IDE files
 ├── app.py                   # Streamlit interactive web dashboard
 ├── LICENSE                  # MIT License
@@ -296,6 +300,61 @@ Open http://localhost:8501 in your browser to interactively tweak battery power/
 
 🚀 **Live Interactive Demo:** [gb-bess-dispatch-optimizer.streamlit.app](https://winengewe-gb-bess-dispatch-optimizer-app-x4kcvm.streamlit.app)
 
+---
+
+## 🧪 Validation & Automated Testing Framework
+
+To ensure industrial reliability and prevent unfeasible dispatch execution, the pipeline implements a **Dual-Layer Validation Framework** in `src/validation.py`. This layer executes automatically during the `main.py` pipeline run and via `pytest` CI/CD workflows.
+
+---
+
+### 1. Machine Learning Forecasting Metrics
+
+Forecasting performance is benchmarked on out-of-sample day-ahead price predictions against both actual settlement prices and a **Naive Persistence Baseline** ($t - 24\text{h}$ / 48 settlement periods back):
+
+* **Mean Absolute Error (MAE):**
+
+$$\text{MAE} = \frac{1}{N} \sum_{t=1}^{N} \vert{}y_t - \hat{y}_t\vert{}$$
+
+* **Root Mean Squared Error (RMSE):**
+
+$$\text{RMSE} = \sqrt{\frac{1}{N} \sum_{t=1}^{N} (y_t - \hat{y}_t)^2}$$
+
+* **Weighted Absolute Percentage Error (WAPE):**
+
+$$
+\text{WAPE} = \frac{\sum_{t=1}^{N} |y_t - \hat{y}_t|}{\sum_{t=1}^{N} |y_t|} \times 100\%
+$$
+
+* **Baseline Outperformance (%):** Quantifies percentage reduction in MAE compared to the persistence baseline.
+
+
+### 2. Physical & Economic Invariant Assertions
+
+Before exporting dispatch schedules or calculating revenue metrics, the output DataFrame is audited against hard physical and economic constraints:
+
+| Invariant Check | Mathematical Constraint | Description |
+| :--- | :--- | :--- |
+| **Power Capacity Bounds** | $0 \le P_{\text{charge}, t}, P_{\text{discharge}, t} \le P_{\text{max}}$ | Ensures charge/discharge rates never exceed the asset rating (e.g., $50\text{ MW}$). |
+| **Storage Energy Bounds** | $0 \le \text{SoC}_t \le E_{\text{max}}$ | Guarantees State of Charge remains within physical limits ($0\text{ to }100\text{ MWh}$). |
+| **Terminal SoC Conservation** | $\text{SoC}_T = \text{SoC}_0$ | Confirms the final State of Charge matches the initial condition ($\pm 0.1\text{ MWh}$). |
+| **Economic Hurdle Rate** | $\Delta P_{\text{spread}} \ge \frac{2 \cdot C_{\text{deg}}}{\sqrt{\text{RTE}}}$ | Prevents degradation-unprofitable dispatch cycles ($\text{Hurdle Rate} \approx £26.65/\text{MWh}$). |
+
+> **Note:** Any violation of these assertions immediately raises an `AssertionError` with detailed diagnostic logs, stopping execution before flawed schedules are published.
+
+
+### 3. Automated Testing Suite (`pytest`)
+
+Unit and integration tests are organized under `tests/` to verify both individual function logic and full end-to-end pipeline execution.
+
+#### Running Tests Locally:
+```bash
+# Install test runner
+pip install pytest
+
+# Run all test modules with verbose output
+pytest -v
+```
 ---
 ## 🛠 Tech Stack
 
