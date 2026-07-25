@@ -122,28 +122,29 @@ $$
 gb-bess-dispatch-optimizer/
 │
 ├── config/
-│   └── config.yaml          # Asset parameters, API settings, and model configs
+│   └── config.yaml          # Asset specifications & market parameters
 │
-├── data/                    # Sample raw and processed Elexon datasets
-│   ├── raw/
-│   └── processed/
+├── data/                    # Managed data directories
+│   ├── raw/                 # Ingested market price & forecast data
+│   └── processed/           # ML feature matrices
 │
-├── docs/                    # Output visualizations & diagrams
-│   └── dispatch_plot.png
+├── docs/                    # Generated output figures
+│   └── dispatch_plot.png    # High-res dispatch visualization
 │
-├── src/                     # Core Production Modules
-│   ├── __init__.py
-│   ├── data_ingestion.py   # Elexon API wrapper & multi-period aggregator
-│   ├── features.py         # Cyclical encodings, lags, & rolling stats
-│   ├── model.py            # XGBoost training & walk-forward validation
-│   ├── optimizer.py        # PuLP linear optimization formulation
-│   └── visualization.py    # Matplotlib two-panel dispatch chart generator
+├── src/                     # Core Production Package
+│   ├── __init__.py          # Marks src as a Python package
+│   ├── data_ingestion.py    # Elexon API wrapper & price generator
+│   ├── features.py          # Lag & Fourier feature engineering
+│   ├── model.py             # XGBoost forecasting pipeline
+│   ├── optimizer.py         # PuLP linear programming solver
+│   └── visualization.py     # Matplotlib plot generator
 │
-├── .gitignore
-├── LICENSE
-├── README.md
-├── main.py                  # End-to-end execution pipeline script
-└── requirements.txt        # Project dependencies
+├── .gitignore               # Excludes cache, virtual environments, raw dumps
+├── app.py                   # Streamlit web dashboard
+├── LICENSE                  # MIT License
+├── main.py                  # CLI execution & backtest pipeline
+├── README.md                # Documentation & performance summary
+└── requirements.txt         # Python package dependencies
 
 ```
 
