@@ -1,10 +1,35 @@
-asset:
-  power_mw: 50.0
-  capacity_mwh: 100.0
-  round_trip_efficiency: 0.88
-  degradation_cost_gbp_per_mwh: 12.50
-  initial_soc_pct: 0.50
+# ==============================================================================
+# GB BESS DISPATCH OPTIMIZER CONFIGURATION
+# ==============================================================================
 
+# Battery Asset Technical Specifications
+asset:
+  power_mw: 50.0                    # Maximum charge/discharge power rating (MW)
+  capacity_mwh: 100.0               # Maximum energy storage capacity (MWh)
+  round_trip_efficiency: 0.88       # Round-trip efficiency (88% RTE)
+  degradation_cost_gbp_mwh: 12.50   # Battery wear penalty (£12.50 / MWh throughput)
+  min_soc_pct: 0.0                  # Minimum State of Charge (0%)
+  max_soc_pct: 1.0                  # Maximum State of Charge (100%)
+  initial_soc_mwh: 50.0             # Boundary condition: starting & ending SoC (50 MWh)
+
+# Great Britain Wholesale Market Parameters
 market:
-  time_step_hours: 0.5
-  settlement_periods: 48
+  settlement_periods: 48            # 48 half-hour settlement periods per day
+  time_step_hours: 0.5              # Duration of each settlement period (30 mins = 0.5 hrs)
+  base_price_gbp: 65.0              # Baseline wholesale electricity price (£/MWh)
+  currency: "GBP"
+
+# Machine Learning Model Parameters (XGBoost)
+model:
+  n_estimators: 150
+  max_depth: 5
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  random_seed: 42
+
+# System & Export Paths
+paths:
+  raw_data_dir: "data/raw"
+  processed_data_dir: "data/processed"
+  output_plot_path: "docs/dispatch_plot.png"
