@@ -78,6 +78,7 @@ $$
 $$
 
 2. **Power & Capacity Limits:**
+   
 $$
 0 \le P_{\text{ch}, t} \le P_{\text{max}} \quad (50 \text{ MW})
 $$
@@ -91,11 +92,12 @@ $$
 $$
 
 3. **Round-Trip Efficiency Split ($\eta_{\text{rt}} = 88\%$):**
+ 
 $$\
 eta_{\text{ch}} = \eta_{\text{dis}} = \sqrt{\eta_{\text{rt}}} \approx 0.9381
 $$
 
-4. **Terminal SoC Boundary Condition:**
+5. **Terminal SoC Boundary Condition:**
    
 $$
 \text{SoC}_0 = \text{SoC}_T = 0.50 \cdot \text{SoC}_{\text{max}} \quad (50 \text{ MWh})
@@ -128,7 +130,7 @@ gb-bess-dispatch-optimizer/
 │
 ├── docs/                    # Output visualizations & diagrams
 │   └── dispatch_plot.png
-││
+│
 ├── src/                     # Core Production Modules
 │   ├── __init__.py
 │   ├── data_ingestion.py   # Elexon API wrapper & multi-period aggregator
@@ -216,19 +218,22 @@ Backtest evaluation performed over a 30-day unseen test horizon across 1,440 set
 * **Forecast Value:** The XGBoost model achieved an **87.8% Capture Rate** relative to perfect market foresight, proving that accurate wind-to-demand ratio features capture peak price spikes effectively.
 * **
 
-### Single-Day Execution Snapshot (main.py Console Output)
-=======================================================
- 📊 DAILY DISPATCH OPTIMIZATION SUMMARY REPORT
-=======================================================
- Asset Rating         : 50.0 MW / 100.0 MWh
- Round-Trip Efficiency: 88.0%
- Gross Arbitrage Rev  : £8,926.96
- Degradation Penalty  : £4,507.95
- Model Net Revenue    : £4,419.01
- Perfect Foresight Rev: £5,033.04
- Financial Capture    : 87.8%
- Equivalent Cycles    : 1.69 EFC/day
-=======================================================
+### Single-Day Execution Snapshot ( `main.py` Console Output)
+
+---
+
+### 📊 Daily Dispatch Optimization Summary Report
+
+| Metric | Value |
+| :--- | :--- |
+| **Asset Rating** | 50.0 MW / 100.0 MWh |
+| **Round-Trip Efficiency** | 88.0% |
+| **Gross Arbitrage Rev** | £8,926.96 |
+| **Degradation Penalty** | £4,507.95 |
+| **Model Net Revenue** | **£4,419.01** |
+| **Perfect Foresight Rev** | £5,033.04 |
+| **Financial Capture** | **87.8%** |
+| **Equivalent Cycles<** | 1.69 EFC/day |
 
 ---
 
