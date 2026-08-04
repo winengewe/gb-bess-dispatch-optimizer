@@ -298,7 +298,7 @@ streamlit run app.py
 ```
 Open http://localhost:8501 in your browser to interactively tweak battery power/capacity, efficiency, degradation penalties, and market seeds.
 
-🚀 **Live Interactive Demo:** [gb-bess-dispatch-optimizer.streamlit.app](https://winengewe-gb-bess-dispatch-optimizer-app-n628yk.streamlit.app/)
+🚀 **Live Interactive Demo:** [gb-bess-dispatch-optimizer.streamlit.app](https://winengewe-gb-bess-dispatch-optimizer.streamlit.app/)
 
 ---
 
